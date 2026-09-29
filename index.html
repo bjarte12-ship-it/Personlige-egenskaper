@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Personlige egenskaper – flashcards</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF2F0;--ink:#0B3A40;--muted:#4C6B6E;--teal:#00838F;--mint:#00C49A;--orange:#E8600F;--paper:#fff;--line:#CFDCDA;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0A1F22;--ink:#E6F2F0;--muted:#9BB8B8;--teal:#0A6E78;--paper:#12343A;--line:#245057;--orange:#FF8A4C}}
+:root[data-theme="dark"]{--bg:#0A1F22;--ink:#E6F2F0;--muted:#9BB8B8;--teal:#0A6E78;--paper:#12343A;--line:#245057;--orange:#FF8A4C}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.5 Figtree,system-ui,sans-serif;min-height:100vh;display:flex;justify-content:center}
+main{width:100%;max-width:520px;padding:20px 18px 28px;display:flex;flex-direction:column;gap:16px}
+h1{font:800 26px/1.1 "Bricolage Grotesque",Georgia,serif;margin:0}
+.top{display:flex;justify-content:space-between;align-items:end;gap:12px}
+.top p{margin:4px 0 0;color:var(--muted);font-size:15px}
+.seg{display:flex;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.seg button{border:0;background:none;color:var(--muted);font:600 14px Figtree,sans-serif;padding:7px 13px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.bar{height:8px;border-radius:9px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--mint);border-radius:9px;transition:width .4s}
+.meta{display:flex;justify-content:space-between;color:var(--muted);font-size:14px;margin-top:-8px}
+.scene{perspective:1200px;height:380px}
+.card{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.2,.8,.2,1);cursor:pointer;border:0;background:none;padding:0;text-align:inherit;color:inherit;font:inherit}
+.card.flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:28px;padding:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
+.front{background:var(--teal);color:#fff;box-shadow:0 18px 40px -18px rgba(0,60,70,.55)}
+.back{background:var(--paper);border:2px solid var(--orange);transform:rotateY(180deg);box-shadow:0 18px 40px -18px rgba(0,60,70,.3)}
+.emo{width:96px;height:96px;border-radius:50%;background:rgba(255,255,255,.16);display:grid;place-items:center;font-size:48px}
+.word{font:800 clamp(30px,9vw,44px)/1.05 "Bricolage Grotesque",Georgia,serif;overflow-wrap:anywhere}
+.hint{font-size:14px;opacity:.75}
+.def{font:700 24px/1.3 "Bricolage Grotesque",Georgia,serif}
+.def b{color:var(--orange)}
+.ex{color:var(--muted);font-style:italic;max-width:32ch}
+.say{position:absolute;top:14px;right:14px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:inherit;font-size:20px;cursor:pointer;z-index:2}
+.back .say{background:var(--bg)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.nav{display:grid;grid-template-columns:56px 1fr 56px;gap:10px}
+button.b{border:1.5px solid var(--line);background:var(--paper);color:var(--ink);font:700 16px Figtree,sans-serif;border-radius:16px;padding:14px;cursor:pointer;min-height:52px}
+button.b.ok{background:var(--mint);border-color:var(--mint);color:#04332A}
+button.b.no{border-color:var(--orange);color:var(--orange)}
+button.b.link{border-style:dashed;color:var(--muted);font-weight:600}
+button:focus-visible{outline:3px solid var(--orange);outline-offset:3px}
+button:active{transform:scale(.98)}
+.done{text-align:center;padding:40px 10px}
+@media (prefers-reduced-motion:reduce){.card,.bar i{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div><h1>Egenskaper</h1><p>Trykk på kortet for å snu det.</p></div>
+    <div class="seg" role="group" aria-label="Retning">
+      <button id="d1" aria-pressed="true">Ord</button>
+      <button id="d2" aria-pressed="false">Forklaring</button>
+    </div>
+  </div>
+  <div class="bar"><i id="bar"></i></div>
+  <div class="meta"><span id="pos"></span><span id="cnt"></span></div>
+  <div id="stage"></div>
+  <div class="row" id="rate">
+    <button class="b no" id="no">Øv mer</button>
+    <button class="b ok" id="ok">Jeg kan den</button>
+  </div>
+  <div class="nav" id="nav">
+    <button class="b" id="prev" aria-label="Forrige">‹</button>
+    <button class="b link" id="shuf">Bland kortene</button>
+    <button class="b" id="next" aria-label="Neste">›</button>
+  </div>
+  <button class="b link" id="only">Vis bare «Øv mer»</button>
+</main>
+<script>
+const D=[
+["sterk","💪","kan løfte tungt.","Hun bærer en tung sofa."],
+["ryddig","🧹","roter ikke.","Han rydder hyllen."],
+["effektiv","⚡","jobber raskt.","Han pakker esker fort."],
+["samarbeidsvillig","🤝","jobber godt sammen med andre.","To kolleger pakker en eske."],
+["blid","😊","smiler ofte og er positiv.","Hun smiler til kundene."],
+["flink","👍","gjør jobben sin bra.","Du er flink på jobb!"],
+["ivrig","🚀","vil lære mye og fort.","Han stiller mange spørsmål."],
+["viljesterk","✊","sier klart meningen sin.","Hun sier: «Jeg vil ikke det.»"],
+["kreativ","💡","har mange nye ideer.","Han har en ny idé hver dag."],
+["omsorgsfull","❤️","er snill mot andre.","«Hvordan har du det? Kan jeg hjelpe deg?»"],
+["rask","🏃","jobber fort.","«Det er mye å gjøre, så jeg må være rask.»"],
+["snill","🌼","er fin mot andre.","«Så snill du er!»"],
+["hjelpsom","🙌","hjelper andre.","«Jeg kan overta for deg.»"],
+["pålitelig","🔑","du kan stole på personen.","«Her er nøkkelen. Jeg stoler på deg.»"],
+["presis","🕒","kommer til riktig tid.","Han kommer alltid presis."],
+["serviceinnstilt","🛎️","vil gi kundene god service.","«Takk for god service!»"],
+["initiativrik","🌱","gjør noe uten å få beskjed.","«Så bra at du har tatt pappen.»"],
+["ansvarsbevisst","🛡️","tar ansvar for jobben sin.","Hun sjekker at alt er ferdig."],
+["arbeidsom","⚒️","jobber mye og hardt.","Han jobber hele dagen."],
+["rotete","🌀","har ikke orden.","Rommet er fullt av ting."],
+["nøyaktig","🎯","gjør ting riktig, uten feil.","Hun teller alle varene."],
+["positiv","🌞","snakker godt om ting.","«Det går bra!»"],
+["hyggelig","😄","er fin å snakke med.","Kollegaen min er hyggelig."],
+["selvstendig","🧭","klarer jobben alene.","Han trenger ikke hjelp."]
+];
+const $=id=>document.getElementById(id);
+let dir='w',order=D.map((_,i)=>i),i=0,flip=false,known=new Set(),onlyPractice=false;
+function deck(){return onlyPractice?order.filter(x=>!known.has(x)):order}
+function say(t){try{const u=new SpeechSynthesisUtterance(t);u.lang='nb-NO';u.rate=.85;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function render(){
+  const dk=deck(),done=dk.length===0;
+  $('bar').style.width=(known.size/D.length*100)+'%';
+  $('cnt').textContent=known.size+' av '+D.length+' kan jeg';
+  $('rate').hidden=$('nav').hidden=done;
+  $('only').textContent=onlyPractice?'Vis alle kortene':'Vis bare «Øv mer»';
+  if(done){$('pos').textContent='';$('stage').innerHTML='<div class="done"><div class="emo" style="margin:0 auto 12px;background:var(--mint)">⭐</div><div class="word">Bra jobbet!</div><p>Du kan alle ordene.</p></div>';return}
+  i=Math.min(i,dk.length-1);const c=D[dk[i]],w=c[0];
+  $('pos').textContent='Kort '+(i+1)+' av '+dk.length;
+  const wf=`<div class="emo" aria-hidden="true">${c[1]}</div><div class="word">${w}</div><div class="hint">Trykk for å snu</div>`;
+  const wb=`<div class="def">En som er <b>${w}</b>,<br>${c[2]}</div><div class="ex">${c[3]}</div>`;
+  const df=`<div class="def" style="color:#fff">En som er …,<br>${c[2]}</div><div class="hint">Hvilket ord passer?</div>`;
+  const db=`<div class="emo" style="background:var(--bg)" aria-hidden="true">${c[1]}</div><div class="word" style="color:var(--orange)">${w}</div><div class="ex">${c[3]}</div>`;
+  $('stage').innerHTML=`<div class="scene"><div class="card ${flip?'flip':''}" id="card" role="button" tabindex="0" aria-label="Kort: snu"><div class="face front">${dir=='w'?wf:df}</div><div class="face back">${dir=='w'?wb:db}</div></div></div>`;
+  const cd=$('card');
+  cd.onclick=()=>{flip=!flip;cd.classList.toggle('flip',flip)};
+  cd.onkeydown=e=>{if(e.key==' '||e.key=='Enter'){e.preventDefault();cd.onclick()}};
+  ['front','back'].forEach(s=>{const f=cd.querySelector('.'+s);const b=document.createElement('button');b.className='say';b.textContent='🔊';b.setAttribute('aria-label','Les høyt');b.onclick=e=>{e.stopPropagation();say(s=='front'&&dir=='w'?w:'En som er '+w+', '+c[2])};f.appendChild(b)});
+}
+function go(n){const l=deck().length;if(!l)return;i=(i+n+l)%l;flip=false;render()}
+function rate(k){const x=deck()[i];k?known.add(x):known.delete(x);if(onlyPractice&&k){flip=false;render()}else go(1)}
+$('next').onclick=()=>go(1);$('prev').onclick=()=>go(-1);
+$('ok').onclick=()=>rate(true);$('no').onclick=()=>rate(false);
+$('shuf').onclick=()=>{for(let k=order.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[order[k],order[j]]=[order[j],order[k]]}i=0;flip=false;render()};
+$('only').onclick=()=>{onlyPractice=!onlyPractice;i=0;flip=false;render()};
+function setDir(d){dir=d;$('d1').setAttribute('aria-pressed',d=='w');$('d2').setAttribute('aria-pressed',d=='d');flip=false;render()}
+$('d1').onclick=()=>setDir('w');$('d2').onclick=()=>setDir('d');
+document.addEventListener('keydown',e=>{if(e.key=='ArrowRight')go(1);if(e.key=='ArrowLeft')go(-1)});
+render();
+</script>
+</body>
+</html>
